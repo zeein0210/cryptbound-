@@ -2,66 +2,128 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>ANIMA: 수명 베팅 계산기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANIMA: Dark Calculator</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; background: #f4f4f9; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background: #333; color: white; }
-        .card-s { color: #d4af37; font-weight: bold; } /* 나비 */
-        input { width: 80%; padding: 5px; }
-        button { padding: 10px 20px; cursor: pointer; background: #333; color: white; border: none; border-radius: 5px; }
-        #result-area { background: #e7f3ff; padding: 15px; border-radius: 5px; white-space: pre-wrap; margin-top: 20px; }
+        /* 다크모드 및 둥글둥글한 디자인 */
+        body { 
+            font-family: 'Nanum Gothic', sans-serif; 
+            padding: 20px; 
+            background: #1e1e1e; 
+            color: #e0e0e0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        .container { width: 100%; max-width: 800px; }
+        h1, h3 { color: #bb86fc; text-align: center; }
+        
+        /* 테이블 디자인 */
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0;
+            margin: 20px 0; 
+            background: #2d2d2d; 
+            border-radius: 15px; 
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #3d3d3d; }
+        th { background: #3d3d3d; color: #bb86fc; font-weight: bold; }
+        
+        /* 입력창 및 버튼 */
+        input, select { 
+            background: #3d3d3d; 
+            color: white; 
+            border: 1px solid #555; 
+            padding: 8px; 
+            border-radius: 10px; 
+            text-align: center;
+        }
+        button { 
+            padding: 12px 25px; 
+            cursor: pointer; 
+            background: #bb86fc; 
+            color: #1e1e1e; 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: bold;
+            transition: 0.3s;
+            display: block;
+            margin: 10px auto;
+        }
+        button:hover { background: #9965f4; transform: scale(1.05); }
+
+        /* 결과 창 (다크블루 포인트) */
+        #result-area { 
+            background: #121212; 
+            padding: 20px; 
+            border-radius: 15px; 
+            border: 2px solid #bb86fc;
+            margin-top: 20px;
+            font-family: monospace;
+            line-height: 1.8;
+        }
+        .card-tag { 
+            background: #444; 
+            padding: 2px 8px; 
+            border-radius: 5px; 
+            font-size: 0.9em; 
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>🃏 ANIMA 게임 진행기</h1>
+    <div class="container">
+        <h1>🃏 ANIMA 진행기</h1>
 
-    <div id="setup">
-        <label>인원 선택: </label>
-        <select id="player-count">
-            <option value="2">2명</option>
-            <option value="3">3명</option>
-            <option value="4">4명</option>
-        </select>
-        <button onclick="setupPlayers()">설정 완료</button>
-    </div>
+        <div id="setup">
+            <label>인원: </label>
+            <select id="player-count">
+                <option value="2">2명</option>
+                <option value="3">3명</option>
+                <option value="4">4명</option>
+            </select>
+            <button onclick="setupPlayers()">설정 완료</button>
+        </div>
 
-    <div id="player-input-area" style="display:none;">
-        <h3>👥 플레이어 정보 입력</h3>
-        <table id="player-table">
-            <thead>
-                <tr>
-                    <th>이름</th>
-                    <th>초기 수명</th>
-                    <th>배분된 패 (자동)</th>
-                </tr>
-            </thead>
-            <tbody id="player-body"></tbody>
-        </table>
-        <button onclick="distributeCards()">카드 배분 및 게임 시작</button>
-    </div>
+        <div id="player-input-area" style="display:none;">
+            <h3>👥 플레이어 정보</h3>
+            <table id="player-table">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>초기 수명</th>
+                        <th>배분된 패</th>
+                    </tr>
+                </thead>
+                <tbody id="player-body"></tbody>
+            </table>
+            <button onclick="distributeCards()">게임 시작</button>
+        </div>
 
-    <div id="round-area" style="display:none;">
-        <h3 id="round-title">🎮 1라운드 진행</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>이름</th>
-                    <th>현재 수명</th>
-                    <th>낼 카드 선택</th>
-                    <th>베팅 수명</th>
-                </tr>
-            </thead>
-            <tbody id="round-body"></tbody>
-        </table>
-        <button onclick="calculateRound()">결과 산출</button>
-    </div>
+        <div id="round-area" style="display:none;">
+            <h3 id="round-title">🎮 라운드 진행</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>보유 패</th>
+                        <th>카드 선택</th>
+                        <th>베팅</th>
+                    </tr>
+                </thead>
+                <tbody id="round-body"></tbody>
+            </table>
+            <button onclick="calculateRound()">결과 산출 및 정산</button>
+        </div>
 
-    <div id="result-area" style="display:none;">
-        <strong>📋 라운드 결과 (복사해서 사용하세요)</strong>
-        <div id="result-text"></div>
-        <button onclick="nextRound()" style="margin-top:10px; background:#28a745;">다음 라운드 진행</button>
+        <div id="result-area" style="display:none;">
+            <h4 style="margin:0 0 10px 0; color:#03dac6;">📋 복붙용 라운드 결과</h4>
+            <div id="result-text"></div>
+            <button onclick="nextRound()" style="background:#03dac6;">다음 라운드로</button>
+        </div>
     </div>
 
     <script>
@@ -82,9 +144,9 @@
             body.innerHTML = '';
             for(let i=0; i<count; i++) {
                 body.innerHTML += `<tr>
-                    <td><input type="text" value="플레이어${i+1}" id="name-${i}"></td>
+                    <td><input type="text" value="P${i+1}" id="name-${i}"></td>
                     <td><input type="number" value="100" id="life-${i}"></td>
-                    <td id="hand-${i}">-</td>
+                    <td id="hand-display-${i}">미배정</td>
                 </tr>`;
             }
             document.getElementById('player-input-area').style.display = 'block';
@@ -102,6 +164,7 @@
                     life: parseInt(document.getElementById(`life-${i}`).value),
                     hand: hand
                 });
+                document.getElementById(`hand-display-${i}`).innerText = hand.join(', ');
             }
             startRound();
         }
@@ -114,10 +177,10 @@
             players.forEach((p, i) => {
                 let options = p.hand.map(c => `<option value="${c}">${c}</option>`).join('');
                 body.innerHTML += `<tr>
-                    <td>${p.name}</td>
-                    <td>${p.life}</td>
+                    <td><strong>${p.name}</strong><br><small>❤️ ${p.life}</small></td>
+                    <td><small>${p.hand.map(h => `<span class="card-tag">${h}</span>`).join('')}</small></td>
                     <td><select id="pick-${i}">${options}</select></td>
-                    <td><input type="number" id="bet-${i}" value="10"></td>
+                    <td><input type="number" id="bet-${i}" style="width:50px;" value="10"></td>
                 </tr>`;
             });
         }
@@ -126,58 +189,61 @@
             let roundPicks = players.map((p, i) => ({
                 player: p,
                 pick: document.getElementById(`pick-${i}`).value,
-                bet: parseInt(document.getElementById(`bet-${i}`).value),
-                idx: i
+                bet: parseInt(document.getElementById(`bet-${i}`).value)
             }));
 
             const boarActive = roundPicks.some(d => d.pick === "멧돼지");
             let totalPool = roundPicks.reduce((sum, d) => sum + d.bet, 0);
             
+            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━\n   🏆 제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
             roundPicks.forEach(d => {
-                let score = CARDS[d.pick].score + d.bet;
+                let cardPoint = CARDS[d.pick].score;
+                let betPoint = d.bet;
+                let bonus = 0;
+
                 if(!boarActive) {
                     roundPicks.forEach(opp => {
                         if(d === opp) return;
-                        if(CARDS[d.pick].wins === opp.pick) score += 3;
-                        else if(CARDS[opp.pick].wins === d.pick) score -= 1;
+                        if(CARDS[d.pick].wins === opp.pick) bonus += 3;
+                        else if(CARDS[opp.pick].wins === d.pick) bonus -= 1;
                     });
                 }
-                d.totalScore = score;
+                d.totalScore = cardPoint + betPoint + bonus;
+                
+                resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n`;
+                resultMsg += `카드 등급 및 점수(${cardPoint}점) + 베팅 수명(${betPoint}점) + 상성 보너스(${bonus}점) = 총합 ${d.totalScore}점\n\n`;
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
-            
-            let resultMsg = `[제 ${currentRound} 라운드 결과]\n🏆 승리자: ${winnerData.player.name}\n\n`;
-            
+            resultMsg += `✨ 라운드 최종 승리자: ${winnerData.player.name} ✨\n\n`;
+
             roundPicks.forEach(d => {
                 let p = d.player;
-                let change = 0;
                 if(p === winnerData.player) {
-                    change = totalPool;
-                    if(d.pick === "두루미" && !boarActive) change *= 2;
-                    p.life += change;
-                    resultMsg += `✅ ${p.name}: +${change} (현재 ${p.life}년)\n`;
+                    let gain = totalPool;
+                    if(d.pick === "두루미" && !boarActive) gain *= 2;
+                    p.life += gain;
+                    resultMsg += `✅ ${p.name}: +${gain}년 (현재 수명: ${p.life}년)\n`;
                 } else {
-                    change = d.bet;
-                    if(d.pick === "두루미" && !boarActive) change = Math.floor(change/2);
-                    p.life -= change;
-                    resultMsg += `🔻 ${p.name}: -${change} (현재 ${p.life}년)\n`;
+                    let loss = d.bet;
+                    if(d.pick === "두루미" && !boarActive) loss = Math.floor(loss/2);
+                    p.life -= loss;
+                    resultMsg += `🔻 ${p.name}: -${loss}년 (현재 수명: ${p.life}년)\n`;
                 }
-                // 사용한 카드 제거
                 p.hand.splice(p.hand.indexOf(d.pick), 1);
             });
 
             document.getElementById('result-text').innerText = resultMsg;
             document.getElementById('result-area').style.display = 'block';
+            if(boarActive) alert("🐗 멧돼지 효과: 상성 및 능력이 무효화되었습니다!");
         }
 
         function nextRound() {
             currentRound++;
             if(currentRound > 3) {
-                alert("게임이 종료되었습니다!");
-                location.reload();
+                alert("3라운드가 모두 종료되었습니다. 최종 결과를 확인하세요!");
             } else {
-                document.getElementById('round-title').innerText = `🎮 ${currentRound}라운드 진행`;
                 document.getElementById('result-area').style.display = 'none';
                 startRound();
             }
