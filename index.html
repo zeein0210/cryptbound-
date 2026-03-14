@@ -204,7 +204,7 @@
                         skillLog += `${p.name}: [두루미 보너스 x2] 적용\n`;
                     }
                     p.life += gain;
-                    resultMsg += `${p.name}: +${gain}년 변동\n`;
+                    resultMsg += `${p.name}: +${gain}년\n`;
                 } else {
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) {
@@ -212,7 +212,7 @@
                         skillLog += `${p.name}: [두루미 소모 감면] 적용\n`;
                     }
                     p.life -= loss;
-                    resultMsg += `${p.name}: -${loss}년 변동\n`;
+                    resultMsg += `${p.name}: -${loss}년\n`;
                 }
             });
 
