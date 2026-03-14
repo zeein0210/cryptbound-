@@ -76,7 +76,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🃏 ANIMA 진행기</h1>
+        <h1>수명결</h1>
 
         <div id="setup">
             <label>인원: </label>
@@ -89,7 +89,7 @@
         </div>
 
         <div id="player-input-area" style="display:none;">
-            <h3>👥 플레이어 정보</h3>
+            <h3>참여자 정보</h3>
             <table id="player-table">
                 <thead>
                     <tr>
@@ -104,13 +104,13 @@
         </div>
 
         <div id="round-area" style="display:none;">
-            <h3 id="round-title">🎮 라운드 진행</h3>
+            <h3 id="round-title">라운드 진행</h3>
             <table>
                 <thead>
                     <tr>
                         <th>이름</th>
                         <th>보유 패</th>
-                        <th>카드 선택</th>
+                        <th>패 선택</th>
                         <th>베팅</th>
                     </tr>
                 </thead>
@@ -120,7 +120,7 @@
         </div>
 
         <div id="result-area" style="display:none;">
-            <h4 style="margin:0 0 10px 0; color:#03dac6;">📋 복붙용 라운드 결과</h4>
+            <h4 style="margin:0 0 10px 0; color:#03dac6;">라운드 결과</h4>
             <div id="result-text"></div>
             <button onclick="nextRound()" style="background:#03dac6;">다음 라운드로</button>
         </div>
@@ -195,7 +195,7 @@
             const boarActive = roundPicks.some(d => d.pick === "멧돼지");
             let totalPool = roundPicks.reduce((sum, d) => sum + d.bet, 0);
             
-            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━\n   🏆 제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━\n    제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
             roundPicks.forEach(d => {
                 let cardPoint = CARDS[d.pick].score;
@@ -216,7 +216,7 @@
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
-            resultMsg += `✨ 라운드 최종 승리자: ${winnerData.player.name} ✨\n\n`;
+            resultMsg += ` 라운드 최종 승리자: ${winnerData.player.name} \n\n`;
 
             roundPicks.forEach(d => {
                 let p = d.player;
@@ -224,12 +224,12 @@
                     let gain = totalPool;
                     if(d.pick === "두루미" && !boarActive) gain *= 2;
                     p.life += gain;
-                    resultMsg += `✅ ${p.name}: +${gain}년 (현재 수명: ${p.life}년)\n`;
+                    resultMsg += ` ${p.name}: +${gain}년 (현재 수명: ${p.life}년)\n`;
                 } else {
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) loss = Math.floor(loss/2);
                     p.life -= loss;
-                    resultMsg += `🔻 ${p.name}: -${loss}년 (현재 수명: ${p.life}년)\n`;
+                    resultMsg += ` ${p.name}: -${loss}년 (현재 수명: ${p.life}년)\n`;
                 }
                 p.hand.splice(p.hand.indexOf(d.pick), 1);
             });
@@ -242,7 +242,7 @@
         function nextRound() {
             currentRound++;
             if(currentRound > 3) {
-                alert("3라운드가 모두 종료되었습니다. 최종 결과를 확인하세요!");
+                alert("3라운드가 모두 종료되었습니다. 최종 결과를 확인하세요.");
             } else {
                 document.getElementById('result-area').style.display = 'none';
                 startRound();
