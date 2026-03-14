@@ -17,7 +17,6 @@
         }
         .container { width: 100%; max-width: 850px; display: flex; flex-direction: column; align-items: center; }
         h1 { color: #800020; font-size: 2.2em; margin-bottom: 30px; }
-        h3 { color: #ffffff; border-left: 4px solid #800020; padding-left: 10px; margin-top: 30px; align-self: flex-start; }
         
         #setup {
             background: #2d2d2d;
@@ -34,16 +33,20 @@
         th { background: #3d3d3d; color: #ffffff; }
         
         input, select { background: #444; color: #fff; border: 1px solid #555; padding: 10px; border-radius: 8px; text-align: center; }
-        button { padding: 12px 30px; cursor: pointer; background: #800020; color: #ffffff; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; }
-        button:hover { background: #a00028; }
+        
+        /* 버튼 컬러 설정 */
+        button { padding: 12px 30px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; transition: 0.2s; }
+        .btn-burgundy { background: #800020; color: #ffffff; }
+        .btn-burgundy:hover { background: #a00028; }
+        .btn-mint { background: #03dac6; color: #000000; }
+        .btn-mint:hover { background: #00b3a4; }
 
-        #result-area { 
-            width: 100%; background: #2d2d2d; padding: 25px; border-radius: 12px; border: 1px solid #444; margin-top: 30px; box-sizing: border-box; 
-        }
+        #result-area { width: 100%; background: #2d2d2d; padding: 25px; border-radius: 12px; border: 1px solid #444; margin-top: 30px; box-sizing: border-box; }
         #result-text { font-family: inherit; white-space: pre-wrap; font-size: 0.95em; line-height: 1.7; }
         
         .card-tag { background: #444; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-right: 4px; border: 1px solid #555; }
         .life-point { color: #03dac6; font-weight: bold; }
+        .skill-text { color: #ffeb3b; font-size: 0.9em; } /* 스킬 발동 텍스트 황색 강조 */
     </style>
 </head>
 <body>
@@ -59,7 +62,7 @@
                 <option value="4">4명</option>
             </select>
             <br>
-            <button onclick="setupPlayers()">설정 완료</button>
+            <button class="btn-burgundy" onclick="setupPlayers()">설정 완료</button>
         </div>
 
         <div id="player-input-area" style="display:none; width:100%;">
@@ -74,7 +77,7 @@
                 </thead>
                 <tbody id="player-body"></tbody>
             </table>
-            <button onclick="distributeCards()">게임 시작</button>
+            <button class="btn-burgundy" onclick="distributeCards()">게임 시작</button>
         </div>
 
         <div id="round-area" style="display:none; width:100%;">
@@ -90,23 +93,23 @@
                 </thead>
                 <tbody id="round-body"></tbody>
             </table>
-            <button onclick="calculateRound()">결과 산출 및 정산</button>
+            <button class="btn-burgundy" onclick="calculateRound()">결과 산출 및 정산</button>
         </div>
 
         <div id="result-area" style="display:none;">
-            <h4 style="margin:0 0 15px 0; border-bottom: 1px solid #444; padding-bottom: 10px;">📋 라운드 정산 리포트 (복붙용)</h4>
+            <h4 style="margin:0 0 15px 0; border-bottom: 1px solid #444; padding-bottom: 10px;">📋 라운드 정산 리포트</h4>
             <div id="result-text"></div>
-            <button onclick="nextRound()" style="background: #444; border: 1px solid #555;">다음 라운드로</button>
+            <button class="btn-mint" onclick="nextRound()">다음 라운드로</button>
         </div>
     </div>
 
     <script>
         const CARDS = {
-            "나비": {score: 10, wins: "제비"},
-            "두루미": {score: 8, wins: "사슴"},
-            "제비": {score: 6, wins: "멧돼지"},
-            "사슴": {score: 4, wins: "나비"},
-            "멧돼지": {score: 2, wins: "두루미"}
+            "나비": {score: 10, wins: "제비", desc: "나비 효과: 사용한 카드 중 1장을 랜덤하게 다시 획득합니다."},
+            "두루미": {score: 8, wins: "사슴", desc: "두루미의 가호: 승리 시 보상 2배 / 패배 시 소모 1/2 (멧돼지 없을 때)"},
+            "제비": {score: 6, wins: "멧돼지", desc: ""},
+            "사슴": {score: 4, wins: "나비", desc: ""},
+            "멧돼지": {score: 2, wins: "두루미", desc: "멧돼지의 돌진: 모든 플레이어의 상성 및 특수 능력을 무효화합니다."}
         };
         const cardNames = Object.keys(CARDS);
         let players = [];
@@ -187,7 +190,7 @@
                 }
                 d.totalScore = cardPoint + betPoint + bonus;
                 resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n`;
-                resultMsg += `카드 점수(${cardPoint}) + 베팅(${betPoint}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
+                resultMsg += `점수 요약: 카드(${cardPoint}) + 베팅(${betPoint}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
@@ -195,18 +198,36 @@
 
             roundPicks.forEach(d => {
                 let p = d.player;
+                let skillLog = "";
+                
+                // 카드 소모 및 나비 스킬 처리
+                p.hand.splice(p.hand.indexOf(d.pick), 1);
+                if(d.pick === "나비" && !boarActive) {
+                    const recovered = cardNames[Math.floor(Math.random()*5)];
+                    p.hand.push(recovered);
+                    skillLog = `🦋 [나비 효과] 랜덤 카드 1장(${recovered}) 재사용 획득!`;
+                }
+
                 if(p === winnerData.player) {
                     let gain = totalPool;
-                    if(d.pick === "두루미" && !boarActive) gain *= 2;
+                    if(d.pick === "두루미" && !boarActive) {
+                        gain *= 2;
+                        skillLog = `🦢 [두루미의 가호] 승리 보상이 2배로 증가했습니다!`;
+                    }
                     p.life += gain;
-                    resultMsg += ` ✅ ${p.name}: +${gain}년 변동\n`; // 수명 노출 안함
+                    resultMsg += ` ✅ ${p.name}: +${gain}년 변동\n`;
                 } else {
                     let loss = d.bet;
-                    if(d.pick === "두루미" && !boarActive) loss = Math.floor(loss/2);
+                    if(d.pick === "두루미" && !boarActive) {
+                        loss = Math.floor(loss/2);
+                        skillLog = `🦢 [두루미의 가호] 패배 소모량이 절반으로 감소했습니다!`;
+                    }
                     p.life -= loss;
-                    resultMsg += ` 🔻 ${p.name}: -${loss}년 변동\n`; // 수명 노출 안함
+                    resultMsg += ` 🔻 ${p.name}: -${loss}년 변동\n`;
                 }
-                p.hand.splice(p.hand.indexOf(d.pick), 1);
+                
+                if(skillLog) resultMsg += `    ㄴ ${skillLog}\n`;
+                if(boarActive && d.pick === "멧돼지") resultMsg += `    ㄴ 🐗 [멧돼지의 돌진] 모든 상성/스킬을 무효화했습니다!\n`;
             });
 
             document.getElementById('result-text').innerText = resultMsg;
@@ -216,7 +237,7 @@
         function nextRound() {
             currentRound++;
             if(currentRound > 3) {
-                alert("3라운드 종료. 게임이 끝났습니다!");
+                alert("3라운드 종료. 최종 생존 여부를 확인해 주세요!");
             } else {
                 document.getElementById('result-area').style.display = 'none';
                 startRound();
