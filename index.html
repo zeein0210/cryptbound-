@@ -54,7 +54,7 @@
         <h1>CRYPTBOUND :: 수명결</h1>
 
         <div id="setup">
-            <h3 style="margin: 0 0 20px 0; border: none;">🎮 게임 설정</h3>
+            <h3 style="margin: 0 0 20px 0; border: none;">참여자 설정</h3>
             <label>참여 인원</label><br>
             <select id="player-count" style="margin-top:10px;">
                 <option value="2">2명</option>
@@ -65,7 +65,7 @@
         </div>
 
         <div id="player-input-area" style="display:none; width:100%;">
-            <h3>👥 참여자 정보</h3>
+            <h3>참여자 정보</h3>
             <table>
                 <thead>
                     <tr><th>이름</th><th>초기 수명</th><th>상태</th></tr>
@@ -76,7 +76,7 @@
         </div>
 
         <div id="round-area" style="display:none; width:100%;">
-            <h3 id="round-title">🎮 라운드 진행</h3>
+            <h3 id="round-title">라운드 진행</h3>
             <table>
                 <thead>
                     <tr><th>이름</th><th>보유 패</th><th>패 선택</th><th>베팅</th></tr>
@@ -88,12 +88,12 @@
 
         <div id="result-area" style="display:none;">
             <div class="report-box">
-                <h4 style="margin:0 0 15px 0; color:#03dac6;">📋 라운드 정산 리포트 (복붙용)</h4>
+                <h4 style="margin:0 0 15px 0; color:#03dac6;">라운드 결과</h4>
                 <div id="result-text"></div>
             </div>
 
             <div class="skill-log-box">
-                <h4 style="margin:0 0 10px 0; color:#ffeb3b;">📜 스킬 발동 로그 (관리자용)</h4>
+                <h4 style="margin:0 0 10px 0; color:#ffeb3b;">속성 효과 발동</h4>
                 <div id="skill-log-text"></div>
             </div>
             
@@ -145,7 +145,7 @@
         function startRound() {
             document.getElementById('player-input-area').style.display = 'none';
             document.getElementById('round-area').style.display = 'block';
-            document.getElementById('round-title').innerText = `🎮 제 ${currentRound} 라운드 진행`;
+            document.getElementById('round-title').innerText = `제 ${currentRound} 라운드 진행`;
             const body = document.getElementById('round-body');
             body.innerHTML = '';
             players.forEach((p, i) => {
@@ -167,7 +167,7 @@
             const boarActive = roundPicks.some(d => d.pick === "멧돼지");
             let totalPool = roundPicks.reduce((sum, d) => sum + d.bet, 0);
             
-            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━\n   제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            let resultMsg = `제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
             let skillLog = "";
 
             roundPicks.forEach(d => {
@@ -185,7 +185,7 @@
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
-            resultMsg += `✨ 라운드 승리자: ${winnerData.player.name} ✨\n\n`;
+            resultMsg += `라운드 승리자: ${winnerData.player.name}\n\n`;
 
             roundPicks.forEach(d => {
                 let p = d.player;
@@ -194,29 +194,29 @@
                 if(d.pick === "나비" && !boarActive) {
                     const recovered = cardNames[Math.floor(Math.random()*5)];
                     p.hand.push(recovered);
-                    skillLog += `🦋 ${p.name}: [나비 효과]로 [${recovered}] 획득\n`;
+                    skillLog += `${p.name}: [나비 효과]로 [${recovered}] 획득\n`;
                 }
 
                 if(p === winnerData.player) {
                     let gain = totalPool;
                     if(d.pick === "두루미" && !boarActive) {
                         gain *= 2;
-                        skillLog += `🦢 ${p.name}: [두루미 보너스 x2] 적용\n`;
+                        skillLog += `${p.name}: [두루미 보너스 x2] 적용\n`;
                     }
                     p.life += gain;
-                    resultMsg += `✅ ${p.name}: +${gain}년 변동\n`;
+                    resultMsg += `${p.name}: +${gain}년 변동\n`;
                 } else {
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) {
                         loss = Math.floor(loss/2);
-                        skillLog += `🦢 ${p.name}: [두루미 소모 감면] 적용\n`;
+                        skillLog += `${p.name}: [두루미 소모 감면] 적용\n`;
                     }
                     p.life -= loss;
-                    resultMsg += `🔻 ${p.name}: -${loss}년 변동\n`;
+                    resultMsg += `${p.name}: -${loss}년 변동\n`;
                 }
             });
 
-            if(boarActive) skillLog += `🐗 멧돼지 효과: 모든 스킬 및 상성이 무효화되었습니다.\n`;
+            if(boarActive) skillLog += `멧돼지 효과: 모든 스킬 및 상성이 무효화되었습니다.\n`;
 
             document.getElementById('result-text').innerText = resultMsg;
             document.getElementById('skill-log-text').innerText = skillLog || "발동된 특수 효과가 없습니다.";
