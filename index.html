@@ -17,6 +17,7 @@
         }
         .container { width: 100%; max-width: 850px; display: flex; flex-direction: column; align-items: center; }
         h1 { color: #800020; font-size: 2.2em; margin-bottom: 30px; }
+        h3 { color: #ffffff; border-left: 4px solid #800020; padding-left: 10px; margin-top: 30px; align-self: flex-start; }
         
         #setup {
             background: #2d2d2d;
@@ -33,25 +34,16 @@
         th { background: #3d3d3d; color: #ffffff; }
         
         input, select { background: #444; color: #fff; border: 1px solid #555; padding: 10px; border-radius: 8px; text-align: center; }
+        button { padding: 12px 30px; cursor: pointer; background: #800020; color: #ffffff; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; }
+        button:hover { background: #a00028; }
 
-        button { padding: 12px 30px; cursor: pointer; background: #800020; color: #ffffff; border: none; border-radius: 8px; font-weight: bold; margin: 10px 0; }
-        
-        /* 비밀 수명 확인 버튼 스타일 */
-        .secret-btn {
-            background: #444;
-            font-size: 0.8em;
-            padding: 5px 10px;
-            border: 1px solid #666;
-            color: #ccc;
+        #result-area { 
+            width: 100%; background: #2d2d2d; padding: 25px; border-radius: 12px; border: 1px solid #444; margin-top: 30px; box-sizing: border-box; 
         }
-
-        #result-area { width: 100%; background: #2d2d2d; padding: 25px; border-radius: 12px; border: 1px solid #444; margin-top: 30px; box-sizing: border-box; }
-        #result-text { white-space: pre-wrap; font-size: 0.95em; line-height: 1.7; }
+        #result-text { font-family: inherit; white-space: pre-wrap; font-size: 0.95em; line-height: 1.7; }
         
-        .card-tag { background: #444; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-right: 4px; border: 1px solid #555; }
-        
-        /* 강조 텍스트 */
-        .winner-name { color: #03dac6; font-weight: bold; }
+        .card-tag { background: #444; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-right: 4px; border: 1px solid #555; }
+        .life-point { color: #03dac6; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,7 +51,7 @@
         <h1>CRYPTBOUND :: 수명결</h1>
 
         <div id="setup">
-            <h3 style="margin-bottom: 20px;">🎮 게임 설정</h3>
+            <h3 style="margin: 0 0 20px 0; border: none; text-align: center;">🎮 게임 설정</h3>
             <label style="display: block; margin-bottom: 10px;">참여 인원</label>
             <select id="player-count" style="width: 100px;">
                 <option value="2">2명</option>
@@ -71,13 +63,13 @@
         </div>
 
         <div id="player-input-area" style="display:none; width:100%;">
-            <h3>👥 참여자 정보 (최초 수명 입력)</h3>
+            <h3>👥 참여자 정보</h3>
             <table>
                 <thead>
                     <tr>
                         <th>이름</th>
                         <th>초기 수명</th>
-                        <th>패 배분</th>
+                        <th>배분된 패</th>
                     </tr>
                 </thead>
                 <tbody id="player-body"></tbody>
@@ -87,12 +79,11 @@
 
         <div id="round-area" style="display:none; width:100%;">
             <h3 id="round-title">🎮 라운드 진행</h3>
-            <p style="font-size: 0.85em; color: #aaa;">* 수명은 본인 확인 버튼을 누를 때만 잠시 표시됩니다.</p>
             <table>
                 <thead>
                     <tr>
                         <th>이름</th>
-                        <th>개인 정보</th>
+                        <th>보유 패</th>
                         <th>패 선택</th>
                         <th>베팅</th>
                     </tr>
@@ -103,10 +94,9 @@
         </div>
 
         <div id="result-area" style="display:none;">
-            <h4 style="margin:0 0 15px 0; border-bottom: 1px solid #444; padding-bottom: 10px;">📋 정산 리포트 (결과창)</h4>
+            <h4 style="margin:0 0 15px 0; border-bottom: 1px solid #444; padding-bottom: 10px;">📋 라운드 정산 리포트 (복붙용)</h4>
             <div id="result-text"></div>
-            <p style="font-size: 0.8em; color: #888; margin-top: 15px;">* 정산 결과에는 수명 증감만 표시되며, 최종 누적 수명은 비밀입니다.</p>
-            <button onclick="nextRound()" style="background: #444;">다음 라운드로</button>
+            <button onclick="nextRound()" style="background: #444; border: 1px solid #555;">다음 라운드로</button>
         </div>
     </div>
 
@@ -155,16 +145,6 @@
             startRound();
         }
 
-        function toggleLife(idx) {
-            const span = document.getElementById(`life-span-${idx}`);
-            if(span.innerText === "???") {
-                span.innerText = players[idx].life + "년";
-                setTimeout(() => { span.innerText = "???"; }, 2000); // 2초 후 다시 가림
-            } else {
-                span.innerText = "???";
-            }
-        }
-
         function startRound() {
             document.getElementById('player-input-area').style.display = 'none';
             document.getElementById('round-area').style.display = 'block';
@@ -174,13 +154,10 @@
             players.forEach((p, i) => {
                 let options = p.hand.map(c => `<option value="${c}">${c}</option>`).join('');
                 body.innerHTML += `<tr>
-                    <td><strong>${p.name}</strong></td>
-                    <td>
-                        <button class="secret-btn" onclick="toggleLife(${i})">수명 확인</button><br>
-                        <span id="life-span-${i}" style="font-size:0.8em; color:#03dac6;">???</span>
-                    </td>
+                    <td><strong>${p.name}</strong><br><small class="life-point">❤️ ${p.life}</small></td>
+                    <td>${p.hand.map(h => `<span class="card-tag">${h}</span>`).join('')}</td>
                     <td><select id="pick-${i}">${options}</select></td>
-                    <td><input type="number" id="bet-${i}" style="width:50px;" value="10"></td>
+                    <td><input type="number" id="bet-${i}" style="width:60px;" value="10"></td>
                 </tr>`;
             });
         }
@@ -210,7 +187,7 @@
                 }
                 d.totalScore = cardPoint + betPoint + bonus;
                 resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n`;
-                resultMsg += `계산: 점수(${cardPoint}) + 베팅(${betPoint}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
+                resultMsg += `카드 점수(${cardPoint}) + 베팅(${betPoint}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
@@ -222,12 +199,12 @@
                     let gain = totalPool;
                     if(d.pick === "두루미" && !boarActive) gain *= 2;
                     p.life += gain;
-                    resultMsg += ` ✅ ${p.name}: +${gain}년 변동\n`;
+                    resultMsg += ` ✅ ${p.name}: +${gain}년 변동\n`; // 수명 노출 안함
                 } else {
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) loss = Math.floor(loss/2);
                     p.life -= loss;
-                    resultMsg += ` 🔻 ${p.name}: -${loss}년 변동\n`;
+                    resultMsg += ` 🔻 ${p.name}: -${loss}년 변동\n`; // 수명 노출 안함
                 }
                 p.hand.splice(p.hand.indexOf(d.pick), 1);
             });
@@ -239,7 +216,7 @@
         function nextRound() {
             currentRound++;
             if(currentRound > 3) {
-                alert("3라운드 종료. 최종 생존 여부를 확인하세요!");
+                alert("3라운드 종료. 게임이 끝났습니다!");
             } else {
                 document.getElementById('result-area').style.display = 'none';
                 startRound();
