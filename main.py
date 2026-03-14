@@ -1,6 +1,5 @@
 import random
 
-# 카드 데이터: 점수 및 상성(승리대상)
 CARDS = {
     "나비": {"score": 10, "wins": "제비"},
     "두루미": {"score": 8, "wins": "사슴"},
@@ -10,70 +9,81 @@ CARDS = {
 }
 
 def run_game():
-    # 1. 초기 데이터 입력
+    print("=== 수명 베팅 게임 'ANIMA' (3라운드 모드) ===")
     num_players = int(input("인원수: "))
     start_life = int(input("초기 수명: "))
     
+    # 플레이어 초기화
     players = []
     for i in range(num_players):
-        # 중복 허용 무작위 3장 배분
+        # 3라운드를 위해 미리 3장 배분
         hand = random.choices(list(CARDS.keys()), k=3)
-        players.append({"name": f"P{i+1}", "life": start_life, "hand": hand})
+        players.append({"name": f"P{i+1}", "life": start_life, "hand": hand, "last_card": None})
 
-    # 2. 각 플레이어 카드 및 베팅액 입력
-    round_data = []
+    # 3라운드 반복
+    for r_num in range(1, 4):
+        print(f"\n" + "="*30)
+        print(f"      ROUND {r_num} START")
+        print("="*30)
+        
+        round_data = []
+        for p in players:
+            print(f"\n{p['name']}의 현재 수명: {p['life']}")
+            print(f"{p['name']}의 남은 패: {p['hand']}")
+            
+            # 나비 능력: 이전 카드 재사용 안내
+            if p['last_card']:
+                print(f"(나비 능력 사용 가능: 이전 카드 '{p['last_card']}' 재사용 가능)")
+
+            pick = input(f"{p['name']} 선택 카드: ")
+            bet = int(input(f"{p['name']} 베팅 수명: "))
+            
+            # 패에서 제거 (재사용 능력이 아닐 경우에만 실제 제거 로직은 복잡하므로 여기선 기본 차감)
+            if pick in p['hand']:
+                p['hand'].remove(pick)
+            
+            p['last_card'] = pick
+            round_data.append({"p": p, "pick": pick, "bet": bet})
+
+        # 계산 로직
+        boar_active = any(d['pick'] == "멧돼지" for d in round_data)
+        total_bet_pool = sum(d['bet'] for d in round_data)
+        results = []
+
+        for d in round_data:
+            score = CARDS[d['pick']]['score'] + d['bet']
+            if not boar_active:
+                for opp in round_data:
+                    if d == opp: continue
+                    if CARDS[d['pick']]['wins'] == opp['pick']: score += 3
+                    elif CARDS[opp['pick']]['wins'] == d['pick']: score -= 1
+            results.append({"data": d, "total_score": score})
+
+        # 라운드 승자 정산
+        winner_res = max(results, key=lambda x: x['total_score'])
+        winner = winner_res['data']['p']
+        print(f"\n▶ 라운드 {r_num} 승자: {winner['name']}!")
+
+        for r in results:
+            p_data = r['data']
+            player = p_data['p']
+            if player == winner:
+                gain = total_bet_pool
+                if p_data['pick'] == "두루미" and not boar_active: gain *= 2
+                player['life'] += gain
+            else:
+                loss = p_data['bet']
+                if p_data['pick'] == "두루미" and not boar_active: loss //= 2
+                player['life'] -= loss
+            
+            if player['life'] <= 0:
+                print(f"💀 {player['name']}의 수명이 다했습니다!")
+
+    print("\n" + "!"*30)
+    print("      최종 게임 종료")
     for p in players:
-        print(f"\n{p['name']}의 패: {p['hand']}")
-        pick = input(f"{p['name']} 선택 카드: ")
-        bet = int(input(f"{p['name']} 베팅 수명: "))
-        round_data.append({"p": p, "pick": pick, "bet": bet})
-
-    # 3. 자동 계산 엔진
-    boar_active = any(d['pick'] == "멧돼지" for d in round_data)
-    total_bet_pool = sum(d['bet'] for d in round_data)
-    results = []
-
-    for d in round_data:
-        # 총합 = 패 등급 점수 + 수명 베팅 + 상성 보너스
-        score = CARDS[d['pick']]['score'] + d['bet']
-        
-        # 상성 보너스 (+3, -1) - 멧돼지 없을 때만 작동
-        if not boar_active:
-            for opp in round_data:
-                if d == opp: continue
-                if CARDS[d['pick']]['wins'] == opp['pick']:
-                    score += 3
-                elif CARDS[opp['pick']]['wins'] == d['pick']:
-                    score -= 1
-        
-        results.append({"data": d, "total_score": score})
-
-    # 4. 승자 판정 및 수명 정산
-    winner_res = max(results, key=lambda x: x['total_score'])
-    winner = winner_res['data']['p']
-
-    print(f"\n결과: {winner_res['data']['p']['name']} 승리 (총점: {winner_res['total_score']})")
-    if boar_active: print("(멧돼지 효과로 상성/능력 무효화됨)")
-
-    for r in results:
-        p_data = r['data']
-        player = p_data['p']
-        
-        if player == winner:
-            gain = total_bet_pool
-            # 두루미 승리 시 2배
-            if p_data['pick'] == "두루미" and not boar_active: gain *= 2
-            player['life'] += gain
-        else:
-            loss = p_data['bet']
-            # 두루미 패배 시 절반
-            if p_data['pick'] == "두루미" and not boar_active: loss //= 2
-            player['life'] -= loss
-        
-        print(f"{player['name']} 최종 수명: {player['life']}")
+        print(f"{p['name']}: 최종 수명 {p['life']}년")
+    print("!"*30)
 
 if __name__ == "__main__":
-    run_game()명: {p['life']}년")
-
-if __name__ == "__main__":
-    play_game()
+    run_game()
