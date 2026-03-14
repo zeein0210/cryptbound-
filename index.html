@@ -32,19 +32,21 @@
         .btn-burgundy { background: #800020; color: #ffffff; }
         .btn-mint { background: #03dac6; color: #000000; }
 
-        /* 결과 영역 디자인 */
         #result-area { width: 100%; margin-top: 30px; }
         .report-box { 
             background: #2d2d2d; padding: 25px; border-radius: 12px; border: 1px solid #444; margin-bottom: 20px;
         }
         #result-text { white-space: pre-wrap; font-size: 0.95em; line-height: 1.7; }
         
-        /* GM 전용 스킬 로그 (비공개 권장 영역) */
         .skill-log-box {
             background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #800020; color: #ffeb3b; font-size: 0.85em;
         }
         .card-tag { background: #444; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-right: 4px; }
         .life-point { color: #03dac6; font-weight: bold; }
+        
+        .end-msg {
+            color: #800020; font-weight: bold; font-size: 1.2em; text-align: center; padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -66,7 +68,7 @@
             <h3>👥 참여자 정보</h3>
             <table>
                 <thead>
-                    <tr><th>이름</th><th>초기 수명</th><th>배분된 패</th></tr>
+                    <tr><th>이름</th><th>초기 수명</th><th>상태</th></tr>
                 </thead>
                 <tbody id="player-body"></tbody>
             </table>
@@ -95,7 +97,8 @@
                 <div id="skill-log-text"></div>
             </div>
             
-            <button class="btn-mint" onclick="nextRound()" style="display:block; margin: 20px auto;">다음 라운드로</button>
+            <div id="action-container" style="text-align: center; margin-top: 20px;">
+                </div>
         </div>
     </div>
 
@@ -120,7 +123,7 @@
                 body.innerHTML += `<tr>
                     <td><input type="text" value="P${i+1}" id="name-${i}"></td>
                     <td><input type="number" value="100" id="life-${i}"></td>
-                    <td id="hand-display-${i}">-</td>
+                    <td id="hand-display-${i}">대기 중</td>
                 </tr>`;
             }
             document.getElementById('player-input-area').style.display = 'block';
@@ -178,28 +181,27 @@
                     });
                 }
                 d.totalScore = cardPoint + d.bet + bonus;
-                resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n카드 등급 및 점수(${cardPoint}점) + 베팅 수명(${d.bet}점) + 상성 보너스(${bonus}점) = 총합 ${d.totalScore}점\n\n`;
+                resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n카드 점수(${cardPoint}) + 베팅(${d.bet}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
-            resultMsg += `✨ 라운드 최종 승리자: ${winnerData.player.name} ✨\n\n`;
+            resultMsg += `✨ 라운드 승리자: ${winnerData.player.name} ✨\n\n`;
 
             roundPicks.forEach(d => {
                 let p = d.player;
                 p.hand.splice(p.hand.indexOf(d.pick), 1);
 
-                // 나비 스킬 (비공개 로그 처리)
                 if(d.pick === "나비" && !boarActive) {
                     const recovered = cardNames[Math.floor(Math.random()*5)];
                     p.hand.push(recovered);
-                    skillLog += `🦋 ${p.name}: 나비 효과로 [${recovered}] 획득\n`;
+                    skillLog += `🦋 ${p.name}: [나비 효과]로 [${recovered}] 획득\n`;
                 }
 
                 if(p === winnerData.player) {
                     let gain = totalPool;
                     if(d.pick === "두루미" && !boarActive) {
                         gain *= 2;
-                        skillLog += `🦢 ${p.name}: 두루미 승리 보너스(x2) 적용\n`;
+                        skillLog += `🦢 ${p.name}: [두루미 보너스 x2] 적용\n`;
                     }
                     p.life += gain;
                     resultMsg += `✅ ${p.name}: +${gain}년 변동\n`;
@@ -207,24 +209,32 @@
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) {
                         loss = Math.floor(loss/2);
-                        skillLog += `🦢 ${p.name}: 두루미 패배 경감(1/2) 적용\n`;
+                        skillLog += `🦢 ${p.name}: [두루미 소모 감면] 적용\n`;
                     }
                     p.life -= loss;
                     resultMsg += `🔻 ${p.name}: -${loss}년 변동\n`;
                 }
             });
 
-            if(boarActive) skillLog += `🐗 멧돼지의 돌진: 모든 스킬 및 상성 무효화됨\n`;
+            if(boarActive) skillLog += `🐗 멧돼지 효과: 모든 스킬 및 상성이 무효화되었습니다.\n`;
 
             document.getElementById('result-text').innerText = resultMsg;
-            document.getElementById('skill-log-text').innerText = skillLog || "이번 라운드에 발동된 특수 효과가 없습니다.";
+            document.getElementById('skill-log-text').innerText = skillLog || "발동된 특수 효과가 없습니다.";
             document.getElementById('result-area').style.display = 'block';
+            
+            // 버튼 제어 로직
+            const actionArea = document.getElementById('action-container');
+            if(currentRound < 3) {
+                actionArea.innerHTML = `<button class="btn-mint" onclick="nextRound()">다음 라운드로</button>`;
+            } else {
+                actionArea.innerHTML = `<div class="end-msg">수명결이 종료되었습니다.</div>`;
+            }
         }
 
         function nextRound() {
             currentRound++;
-            if(currentRound > 3) alert("3라운드가 종료되었습니다.");
-            else { document.getElementById('result-area').style.display = 'none'; startRound(); }
+            document.getElementById('result-area').style.display = 'none'; 
+            startRound();
         }
     </script>
 </body>
