@@ -3,20 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ANIMA: Dark Calculator</title>
+    <title>CRYPTBOUND :: 수명결</title>
     <style>
-        /* 다크모드 및 둥글둥글한 디자인 */
+        /* 다크모드 및 중앙 정렬 디자인 */
         body { 
             font-family: 'Nanum Gothic', sans-serif; 
             padding: 20px; 
-            background: #1e1e1e; 
+            background: #121212; 
             color: #e0e0e0; 
             display: flex; 
             flex-direction: column; 
             align-items: center;
+            min-height: 100vh;
         }
-        .container { width: 100%; max-width: 800px; }
-        h1, h3 { color: #bb86fc; text-align: center; }
+        .container { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { color: #800020; text-align: center; font-size: 2.5em; margin-bottom: 30px; }
+        h3 { color: #800020; margin-top: 30px; }
+        
+        /* 중앙 설정 영역 */
+        #setup {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid #333;
+        }
         
         /* 테이블 디자인 */
         table { 
@@ -24,53 +42,62 @@
             border-collapse: separate; 
             border-spacing: 0;
             margin: 20px 0; 
-            background: #2d2d2d; 
+            background: #1e1e1e; 
             border-radius: 15px; 
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #3d3d3d; }
-        th { background: #3d3d3d; color: #bb86fc; font-weight: bold; }
+        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #333; }
+        th { background: #2d2d2d; color: #800020; font-weight: bold; }
         
         /* 입력창 및 버튼 */
         input, select { 
-            background: #3d3d3d; 
+            background: #2d2d2d; 
             color: white; 
-            border: 1px solid #555; 
-            padding: 8px; 
-            border-radius: 10px; 
+            border: 1px solid #444; 
+            padding: 10px; 
+            border-radius: 12px; 
             text-align: center;
+            outline: none;
         }
         button { 
-            padding: 12px 25px; 
+            padding: 12px 30px; 
             cursor: pointer; 
-            background: #bb86fc; 
-            color: #1e1e1e; 
+            background: #800020; 
+            color: white; 
             border: none; 
-            border-radius: 20px; 
+            border-radius: 25px; 
             font-weight: bold;
             transition: 0.3s;
-            display: block;
-            margin: 10px auto;
+            margin-top: 15px;
         }
-        button:hover { background: #9965f4; transform: scale(1.05); }
+        button:hover { background: #a00028; transform: scale(1.05); }
 
-        /* 결과 창 (다크블루 포인트) */
+        /* 결과 창 (민트/시안 포인트) */
         #result-area { 
-            background: #121212; 
-            padding: 20px; 
-            border-radius: 15px; 
-            border: 2px solid #bb86fc;
-            margin-top: 20px;
-            font-family: monospace;
+            width: 100%;
+            background: #0a0a0a; 
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 2px solid #03dac6;
+            margin-top: 30px;
+            font-family: 'Courier New', Courier, monospace;
             line-height: 1.8;
+            box-sizing: border-box;
         }
         .card-tag { 
-            background: #444; 
-            padding: 2px 8px; 
-            border-radius: 5px; 
-            font-size: 0.9em; 
+            background: #333; 
+            color: #03dac6;
+            padding: 3px 10px; 
+            border-radius: 8px; 
+            font-size: 0.85em; 
             margin-right: 5px;
+            border: 1px solid #444;
+        }
+        .winner-text {
+            color: #03dac6;
+            font-weight: bold;
+            font-size: 1.1em;
         }
     </style>
 </head>
@@ -79,18 +106,20 @@
         <h1>CRYPTBOUND :: 수명결</h1>
 
         <div id="setup">
-            <label>인원: </label>
+            <h3 style="margin-top:0;">인원 설정</h3>
+            <label style="margin-right: 10px;">참여 인원</label>
             <select id="player-count">
                 <option value="2">2명</option>
                 <option value="3">3명</option>
                 <option value="4">4명</option>
             </select>
+            <br>
             <button onclick="setupPlayers()">설정 완료</button>
         </div>
 
-        <div id="player-input-area" style="display:none;">
+        <div id="player-input-area" style="display:none; width:100%;">
             <h3>참여자 정보</h3>
-            <table id="player-table">
+            <table>
                 <thead>
                     <tr>
                         <th>이름</th>
@@ -103,8 +132,8 @@
             <button onclick="distributeCards()">게임 시작</button>
         </div>
 
-        <div id="round-area" style="display:none;">
-            <h3 id="round-title">라운드 진행</h3>
+        <div id="round-area" style="display:none; width:100%;">
+            <h3 id="round-title"> 1라운드 진행</h3>
             <table>
                 <thead>
                     <tr>
@@ -120,9 +149,9 @@
         </div>
 
         <div id="result-area" style="display:none;">
-            <h4 style="margin:0 0 10px 0; color:#03dac6;">라운드 결과</h4>
-            <div id="result-text"></div>
-            <button onclick="nextRound()" style="background:#03dac6;">다음 라운드로</button>
+            <h4 style="margin:0 0 15px 0; color:#03dac6; text-align:center;"> 라운드 결과</h4>
+            <div id="result-text" style="white-space: pre-wrap;"></div>
+            <button onclick="nextRound()" style="background:#03dac6; color:#000;">다음 라운드로</button>
         </div>
     </div>
 
@@ -142,18 +171,21 @@
             const count = document.getElementById('player-count').value;
             const body = document.getElementById('player-body');
             body.innerHTML = '';
+            players = []; // 배열 초기화
             for(let i=0; i<count; i++) {
                 body.innerHTML += `<tr>
                     <td><input type="text" value="P${i+1}" id="name-${i}"></td>
                     <td><input type="number" value="100" id="life-${i}"></td>
-                    <td id="hand-display-${i}">미배정</td>
+                    <td id="hand-display-${i}">-</td>
                 </tr>`;
             }
             document.getElementById('player-input-area').style.display = 'block';
+            document.getElementById('setup').style.display = 'none';
         }
 
         function distributeCards() {
-            for(let i=0; i<document.getElementById('player-count').value; i++) {
+            const count = document.getElementById('player-count').value;
+            for(let i=0; i<count; i++) {
                 const hand = [
                     cardNames[Math.floor(Math.random()*5)],
                     cardNames[Math.floor(Math.random()*5)],
@@ -172,13 +204,14 @@
         function startRound() {
             document.getElementById('player-input-area').style.display = 'none';
             document.getElementById('round-area').style.display = 'block';
+            document.getElementById('round-title').innerText = ` 제 ${currentRound} 라운드 진행`;
             const body = document.getElementById('round-body');
             body.innerHTML = '';
             players.forEach((p, i) => {
                 let options = p.hand.map(c => `<option value="${c}">${c}</option>`).join('');
                 body.innerHTML += `<tr>
-                    <td><strong>${p.name}</strong><br><small>❤️ ${p.life}</small></td>
-                    <td><small>${p.hand.map(h => `<span class="card-tag">${h}</span>`).join('')}</small></td>
+                    <td><strong>${p.name}</strong><br><small style="color:#03dac6">❤️ ${p.life}</small></td>
+                    <td>${p.hand.map(h => `<span class="card-tag">${h}</span>`).join('')}</td>
                     <td><select id="pick-${i}">${options}</select></td>
                     <td><input type="number" id="bet-${i}" style="width:50px;" value="10"></td>
                 </tr>`;
@@ -195,7 +228,7 @@
             const boarActive = roundPicks.some(d => d.pick === "멧돼지");
             let totalPool = roundPicks.reduce((sum, d) => sum + d.bet, 0);
             
-            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━\n    제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            let resultMsg = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n     제 ${currentRound} 라운드 정산 결과\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
             roundPicks.forEach(d => {
                 let cardPoint = CARDS[d.pick].score;
@@ -212,7 +245,7 @@
                 d.totalScore = cardPoint + betPoint + bonus;
                 
                 resultMsg += `[${d.player.name}] 제출 카드 : ${d.pick}\n`;
-                resultMsg += `카드 등급 및 점수(${cardPoint}점) + 베팅 수명(${betPoint}점) + 상성 보너스(${bonus}점) = 총합 ${d.totalScore}점\n\n`;
+                resultMsg += `카드 점수(${cardPoint}) + 베팅(${betPoint}) + 상성(${bonus}) = 총합 ${d.totalScore}점\n\n`;
             });
 
             const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
@@ -224,12 +257,12 @@
                     let gain = totalPool;
                     if(d.pick === "두루미" && !boarActive) gain *= 2;
                     p.life += gain;
-                    resultMsg += ` ${p.name}: +${gain}년 (현재 수명: ${p.life}년)\n`;
+                    resultMsg += `  ${p.name}: +${gain}년 (현재: ${p.life}년)\n`;
                 } else {
                     let loss = d.bet;
                     if(d.pick === "두루미" && !boarActive) loss = Math.floor(loss/2);
                     p.life -= loss;
-                    resultMsg += ` ${p.name}: -${loss}년 (현재 수명: ${p.life}년)\n`;
+                    resultMsg += `  ${p.name}: -${loss}년 (현재: ${p.life}년)\n`;
                 }
                 p.hand.splice(p.hand.indexOf(d.pick), 1);
             });
@@ -242,7 +275,7 @@
         function nextRound() {
             currentRound++;
             if(currentRound > 3) {
-                alert("3라운드가 모두 종료되었습니다. 최종 결과를 확인하세요.");
+                alert("3라운드가 종료되었습니다. 최종 결과를 확인하세요.");
             } else {
                 document.getElementById('result-area').style.display = 'none';
                 startRound();
