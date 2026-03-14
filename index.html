@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ANIMA: 수명 베팅 계산기</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; background: #f4f4f9; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #333; color: white; }
+        .card-s { color: #d4af37; font-weight: bold; } /* 나비 */
+        input { width: 80%; padding: 5px; }
+        button { padding: 10px 20px; cursor: pointer; background: #333; color: white; border: none; border-radius: 5px; }
+        #result-area { background: #e7f3ff; padding: 15px; border-radius: 5px; white-space: pre-wrap; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🃏 ANIMA 게임 진행기</h1>
+
+    <div id="setup">
+        <label>인원 선택: </label>
+        <select id="player-count">
+            <option value="2">2명</option>
+            <option value="3">3명</option>
+            <option value="4">4명</option>
+        </select>
+        <button onclick="setupPlayers()">설정 완료</button>
+    </div>
+
+    <div id="player-input-area" style="display:none;">
+        <h3>👥 플레이어 정보 입력</h3>
+        <table id="player-table">
+            <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>초기 수명</th>
+                    <th>배분된 패 (자동)</th>
+                </tr>
+            </thead>
+            <tbody id="player-body"></tbody>
+        </table>
+        <button onclick="distributeCards()">카드 배분 및 게임 시작</button>
+    </div>
+
+    <div id="round-area" style="display:none;">
+        <h3 id="round-title">🎮 1라운드 진행</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>현재 수명</th>
+                    <th>낼 카드 선택</th>
+                    <th>베팅 수명</th>
+                </tr>
+            </thead>
+            <tbody id="round-body"></tbody>
+        </table>
+        <button onclick="calculateRound()">결과 산출</button>
+    </div>
+
+    <div id="result-area" style="display:none;">
+        <strong>📋 라운드 결과 (복사해서 사용하세요)</strong>
+        <div id="result-text"></div>
+        <button onclick="nextRound()" style="margin-top:10px; background:#28a745;">다음 라운드 진행</button>
+    </div>
+
+    <script>
+        const CARDS = {
+            "나비": {score: 10, wins: "제비"},
+            "두루미": {score: 8, wins: "사슴"},
+            "제비": {score: 6, wins: "멧돼지"},
+            "사슴": {score: 4, wins: "나비"},
+            "멧돼지": {score: 2, wins: "두루미"}
+        };
+        const cardNames = Object.keys(CARDS);
+        let players = [];
+        let currentRound = 1;
+
+        function setupPlayers() {
+            const count = document.getElementById('player-count').value;
+            const body = document.getElementById('player-body');
+            body.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                body.innerHTML += `<tr>
+                    <td><input type="text" value="플레이어${i+1}" id="name-${i}"></td>
+                    <td><input type="number" value="100" id="life-${i}"></td>
+                    <td id="hand-${i}">-</td>
+                </tr>`;
+            }
+            document.getElementById('player-input-area').style.display = 'block';
+        }
+
+        function distributeCards() {
+            for(let i=0; i<document.getElementById('player-count').value; i++) {
+                const hand = [
+                    cardNames[Math.floor(Math.random()*5)],
+                    cardNames[Math.floor(Math.random()*5)],
+                    cardNames[Math.floor(Math.random()*5)]
+                ];
+                players.push({
+                    name: document.getElementById(`name-${i}`).value,
+                    life: parseInt(document.getElementById(`life-${i}`).value),
+                    hand: hand
+                });
+            }
+            startRound();
+        }
+
+        function startRound() {
+            document.getElementById('player-input-area').style.display = 'none';
+            document.getElementById('round-area').style.display = 'block';
+            const body = document.getElementById('round-body');
+            body.innerHTML = '';
+            players.forEach((p, i) => {
+                let options = p.hand.map(c => `<option value="${c}">${c}</option>`).join('');
+                body.innerHTML += `<tr>
+                    <td>${p.name}</td>
+                    <td>${p.life}</td>
+                    <td><select id="pick-${i}">${options}</select></td>
+                    <td><input type="number" id="bet-${i}" value="10"></td>
+                </tr>`;
+            });
+        }
+
+        function calculateRound() {
+            let roundPicks = players.map((p, i) => ({
+                player: p,
+                pick: document.getElementById(`pick-${i}`).value,
+                bet: parseInt(document.getElementById(`bet-${i}`).value),
+                idx: i
+            }));
+
+            const boarActive = roundPicks.some(d => d.pick === "멧돼지");
+            let totalPool = roundPicks.reduce((sum, d) => sum + d.bet, 0);
+            
+            roundPicks.forEach(d => {
+                let score = CARDS[d.pick].score + d.bet;
+                if(!boarActive) {
+                    roundPicks.forEach(opp => {
+                        if(d === opp) return;
+                        if(CARDS[d.pick].wins === opp.pick) score += 3;
+                        else if(CARDS[opp.pick].wins === d.pick) score -= 1;
+                    });
+                }
+                d.totalScore = score;
+            });
+
+            const winnerData = roundPicks.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
+            
+            let resultMsg = `[제 ${currentRound} 라운드 결과]\n🏆 승리자: ${winnerData.player.name}\n\n`;
+            
+            roundPicks.forEach(d => {
+                let p = d.player;
+                let change = 0;
+                if(p === winnerData.player) {
+                    change = totalPool;
+                    if(d.pick === "두루미" && !boarActive) change *= 2;
+                    p.life += change;
+                    resultMsg += `✅ ${p.name}: +${change} (현재 ${p.life}년)\n`;
+                } else {
+                    change = d.bet;
+                    if(d.pick === "두루미" && !boarActive) change = Math.floor(change/2);
+                    p.life -= change;
+                    resultMsg += `🔻 ${p.name}: -${change} (현재 ${p.life}년)\n`;
+                }
+                // 사용한 카드 제거
+                p.hand.splice(p.hand.indexOf(d.pick), 1);
+            });
+
+            document.getElementById('result-text').innerText = resultMsg;
+            document.getElementById('result-area').style.display = 'block';
+        }
+
+        function nextRound() {
+            currentRound++;
+            if(currentRound > 3) {
+                alert("게임이 종료되었습니다!");
+                location.reload();
+            } else {
+                document.getElementById('round-title').innerText = `🎮 ${currentRound}라운드 진행`;
+                document.getElementById('result-area').style.display = 'none';
+                startRound();
+            }
+        }
+    </script>
+</body>
+</html>
